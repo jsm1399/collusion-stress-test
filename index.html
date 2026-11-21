@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Collusion Stress-Test</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚖️</text></svg>">
+<style>
+:root{--bg:#fff;--fg:#1a1d21;--mut:#5b6470;--line:#d9dde3;--card:#f6f7f9;--acc:#1f5fbf;--red:#b42318;--grn:#1a7f37;--amb:#9a6700}
+@media(prefers-color-scheme:dark){:root{--bg:#14171a;--fg:#e8eaed;--mut:#9aa3ae;--line:#2c3239;--card:#1c2025;--acc:#6ea8ff;--red:#ff7b72;--grn:#56d364;--amb:#e3b341}}
+*{box-sizing:border-box}body{margin:0;font:15px/1.5 system-ui,sans-serif;background:var(--bg);color:var(--fg)}
+header,main{max-width:1000px;margin:0 auto;padding:16px}
+h1{margin:0 0 4px;font-size:22px}h2{font-size:17px;margin:24px 0 8px}p{margin:6px 0}.mut{color:var(--mut);font-size:13px}
+.warn{border-left:4px solid var(--amb);background:var(--card);padding:8px 12px;margin-top:10px;font-size:13px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px;margin-top:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+label{display:block;font-size:12px;color:var(--mut)}input,select,textarea,button{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 8px;width:100%}
+button{width:auto;cursor:pointer;background:var(--acc);color:#fff;border:0;padding:8px 14px}button.sec{background:var(--bg);color:var(--fg);border:1px solid var(--line)}button:disabled{opacity:.5;cursor:default}
+textarea{font:12px ui-monospace,monospace;min-height:160px}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.badge{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px;font-weight:600;border:1px solid currentColor}
+.flagged{color:var(--red)}.not-flagged{color:var(--grn)}.inconclusive,.informational{color:var(--amb)}
+table{border-collapse:collapse;width:100%;font-size:13px}th,td{border-bottom:1px solid var(--line);padding:5px 6px;text-align:left}
+.scroll{overflow-x:auto}svg{width:100%;height:auto;display:block}.finding{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:8px 0;background:var(--bg)}
+.finding ul{margin:6px 0 0 18px;padding:0}.bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden}.bar>div{height:100%;background:var(--acc);width:0}
+</style>
+</head>
+<body>
+<header>
+  <h1>⚖️ Collusion Stress-Test</h1>
+  <div class="mut">Open, reproducible testing of autonomous pricing agents in simulated markets. Runs entirely in your browser.</div>
+  <div class="warn"><b>Read results carefully.</b> A simulation can show behavior that deserves investigation. It cannot prove an agreement, intent, or a violation of antitrust law.</div>
+</header>
+<main>
+  <section class="panel">
+    <div class="grid">
+      <div><label>Scenario</label><select id="preset"></select></div>
+      <div><label>Firms (2–4)</label><select id="n"><option>2</option><option>3</option><option>4</option></select></div>
+      <div><label>Substitutability μ (lower = closer substitutes)</label><input id="mu" type="number" step="0.05" min="0.05"></div>
+      <div><label>Outside-option value a₀</label><input id="a0" type="number" step="0.1"></div>
+      <div><label>Periods per run</label><input id="periods" type="number" step="1000" min="1000" max="2000000"></div>
+      <div><label>Seeds (runs)</label><input id="seeds" type="number" min="1" max="200"></div>
+      <div><label>Base seed</label><input id="baseSeed" type="number"></div>
+    </div>
+    <div class="grid" id="agents" style="margin-top:10px"></div>
+    <div class="row"><button id="run">Run experiment</button><div style="flex:1;min-width:140px"><div class="bar"><div id="prog"></div></div><div class="mut" id="progtxt"></div></div></div>
+    <details style="margin-top:10px"><summary class="mut">Advanced: full experiment configuration (JSON)</summary>
+      <textarea id="json" spellcheck="false"></textarea>
+      <div class="row"><button class="sec" id="loadjson">Load this JSON</button><span class="mut" id="jsonerr"></span></div>
+    </details>
+  </section>
+  <div id="results"></div>
+  <section class="panel">
+    <b>Parameter sweep</b> <span class="mut">Repeats the whole experiment above for several values of one setting to see how behavior changes.</span>
+    <div class="grid" style="margin-top:8px">
+      <div><label>Setting to vary</label><select id="sw-param"></select></div>
+      <div><label>Values (comma-separated, up to 8)</label><input id="sw-values"></div>
+    </div>
+    <div class="row"><button id="sw-run">Run sweep</button><span class="mut" id="sw-msg">Tip: lower the seeds or periods above first; a sweep runs the full experiment once per value.</span></div>
+    <div id="sw-results"></div>
+  </section>
+  <section class="panel">
+    <b>Standard test suite (CST-1 v1.0.0)</b> <span class="mut">A fixed battery of 7 market scenarios (close/distant substitutes, three firms, noisy demand, noisy observation, competitive rival) applied identically to any agent, so results are comparable.</span>
+    <div class="grid" style="margin-top:8px">
+      <div><label>Agent to test</label><select id="su-agent"></select></div>
+      <div><label>Periods per run</label><input id="su-periods" type="number" value="100000" step="10000" min="1000"></div>
+      <div><label>Seeds per scenario</label><input id="su-seeds" type="number" value="10" min="1" max="50"></div>
+    </div>
+    <div class="row"><button id="su-run">Run suite</button><span class="mut" id="su-msg">Q-learning at the defaults takes several minutes.</span></div>
+    <div id="su-results"></div>
+  </section>
+  <section class="panel">
+    <b>Test an LLM pricing agent (bring your own endpoint)</b> <span class="mut">Two copies of your model price against each other in the simulated market. Uses any OpenAI-compatible chat endpoint you provide (a hosted API with your own key, or a local model such as Ollama). Your key stays in this page's memory, goes only to your endpoint, and is never saved or exported. API calls may cost you money; a local model is free. The endpoint must allow browser (CORS) requests.</span>
+    <div class="grid" style="margin-top:8px">
+      <div><label>Endpoint URL (chat completions)</label><input id="llm-url" placeholder="http://localhost:11434/v1/chat/completions"></div>
+      <div><label>Model name</label><input id="llm-model" placeholder="e.g. llama3.1"></div>
+      <div><label>API key (optional)</label><input id="llm-key" type="password" autocomplete="off"></div>
+      <div><label>Prompt goal</label><select id="llm-goal"><option value="long-run">Maximize cumulative profit over all periods</option><option value="profit">Maximize profit</option></select></div>
+      <div><label>Periods</label><input id="llm-periods" type="number" value="100" min="20" max="2000"></div>
+      <div><label>Seeds (independent runs)</label><input id="llm-seeds" type="number" value="5" min="1" max="30"></div>
+      <div><label>Temperature (0 = most repeatable)</label><input id="llm-temp" type="number" value="1" min="0" max="2" step="0.1"></div>
+      <div><label><input id="llm-explain" type="checkbox" checked style="width:auto"> Ask for a one-sentence reason (aids interpretation)</label><label><input id="llm-sendseed" type="checkbox" style="width:auto"> Send a per-run seed (if the endpoint supports it)</label></div>
+    </div>
+    <div class="row"><button id="llm-run">Run LLM test</button><span class="mut" id="llm-msg"></span></div>
+    <div class="row"><label style="margin:0">Verify a saved result (replays its transcript offline, no model calls):</label><input id="llm-verify" type="file" accept=".json" style="width:auto"><span class="mut" id="llm-vmsg"></span></div>
+    <div id="llm-results"></div>
+  </section>
+</main>
+<script type="module" src="ui/app.js"></script>
+</body>
+</html>
