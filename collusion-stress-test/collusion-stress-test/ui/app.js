@@ -135,3 +135,33 @@ function renderSuite(r) {
   $('su-md').onclick = () => download(`cst1-${r.runHash}.md`, suiteToMarkdown(suiteLast, new Date().toISOString()), 'text/markdown');
   $('su-json').onclick = () => download(`cst1-${r.runHash}.json`, JSON.stringify(suiteLast, null, 2), 'application/json');
 }
+
+// ---- LLM agent test ----
+import { llmToMarkdown } from '../src/llm/run.js';
+let llmLast = null, llmWorker = null;
+const llmEst = () => { const c = 2 * Number($('llm-periods').value) * Number($('llm-seeds').value); $('llm-msg').textContent = `Will make about ${c.toLocaleString('en-US')} model calls.`; };
+['llm-periods', 'llm-seeds'].forEach((id) => $(id).addEventListener('input', llmEst)); llmEst();
+$('llm-run').addEventListener('click', () => {
+  const endpoint = $('llm-url').value.trim(), model = $('llm-model').value.trim();
+  if (!endpoint || !model) { $('llm-msg').textContent = 'Enter an endpoint URL and a model name.'; return; }
+  if (llmWorker) llmWorker.terminate();
+  $('llm-run').disabled = true; $('llm-results').innerHTML = '';
+  const spec = { type: 'llm-chat', endpoint, model, goal: $('llm-goal').value, ...($('llm-key').value ? { apiKey: $('llm-key').value } : {}) };
+  llmWorker = new Worker(new URL('./worker.js', import.meta.url), { type: 'module' });
+  llmWorker.onmessage = (e) => {
+    const m = e.data;
+    if (m.type === 'progress') $('llm-msg').textContent = `Running… ${Math.round(100 * m.d / m.t)}%`;
+    else if (m.type === 'llm-done') { llmLast = m.res; $('llm-run').disabled = false; $('llm-msg').textContent = 'Done.'; renderLLM(m.res); }
+    else { $('llm-run').disabled = false; $('llm-msg').textContent = 'Could not run: ' + m.message; }
+  };
+  llmWorker.onerror = (e) => { $('llm-run').disabled = false; $('llm-msg').textContent = 'Worker error: ' + (e.message || 'unknown'); };
+  llmWorker.postMessage({ kind: 'llm', cfg: { name: 'LLM agent test: ' + model, market: { n: 2 }, periods: Number($('llm-periods').value), seeds: Number($('llm-seeds').value), agents: [spec, { ...spec }] } });
+});
+function renderLLM(r) {
+  const f = r.finding, b = r.benchmarks;
+  $('llm-results').innerHTML = `<div class="finding"><b>${esc(f.title)}</b> <span class="badge ${f.status}">${LABEL[f.status]}</span><ul>${f.evidence.map((e) => `<li>${esc(e)}</li>`).join('')}${f.caveats.map((e) => `<li class="mut"><i>Caveat:</i> ${esc(e)}</li>`).join('')}</ul></div>
+  ${lineChart(r.sample.prices[0].map((_, i) => ({ name: 'Firm ' + (i + 1), values: r.sample.prices.map((p) => p[i]) })), [{ y: b.nash, label: 'Nash' }, { y: b.monopoly, label: 'Joint-profit max' }], 'Prices over time, first seed')}
+  <div class="row"><button class="sec" id="llm-md">Download report (.md)</button><button class="sec" id="llm-json">Download results (.json, key redacted)</button></div>`;
+  $('llm-md').onclick = () => download(`llm-${r.configHash}.md`, llmToMarkdown(llmLast, new Date().toISOString()), 'text/markdown');
+  $('llm-json').onclick = () => download(`llm-${r.configHash}.json`, JSON.stringify(llmLast, null, 2), 'application/json');
+}

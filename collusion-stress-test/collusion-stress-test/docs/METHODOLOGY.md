@@ -11,6 +11,9 @@ Logit demand, market size 1, symmetric firms (quality `a`, cost `c`), outside op
 - `monitoringNoise` σ: each agent observes rivals' prices with additive Gaussian noise (own price exact), in the spirit of Green–Porter imperfect monitoring. This is a simplified stand-in, not a full Green–Porter model. Positive-control agents' trigger tolerance may need adjusting under monitoring noise.
 - The forced-deviation probe always runs with noise-free observations.
 
+## LLM agents (bring your own endpoint)
+`src/llm/` runs asynchronous simulations in which firms are LLMs behind an OpenAI-compatible chat endpoint the user supplies (a hosted API with their own key, or a local model). The prompt states the firm's cost, price bounds and goal, and shows the last 10 periods of own/rival prices and own profit; it never mentions collusion, equilibrium prices or the benchmark. The goal wording is configurable because prompt wording materially changes behavior in the literature (Fish et al. 2024). Replies are parsed for a price and clamped to the allowed range; unparseable replies reuse the previous price and are counted. Keys are never stored or exported. Limits: runs are short and few (cost), so intervals are wide; seeds ≥ 3 required; the finding is a one-sided screen (mean Δ ≥ 0.1 and CI lower bound > 0), not compared against a simulated baseline; retaliation is not assessed because LLM agents cannot be frozen and replayed; results depend on model, temperature, prompt and API version, so reports record the config but cannot guarantee bit-identical reproduction.
+
 ## Standard suite CST-1
 `src/suites/standard.js` fixes 7 scenarios, thresholds and seeds so any agent is tested identically. Changing any scenario requires a new suite version. Self-play scenarios (S1–S6) assume all firms run the tested agent; S7 uses one competitive rival.
 

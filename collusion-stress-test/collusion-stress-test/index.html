@@ -68,6 +68,19 @@ table{border-collapse:collapse;width:100%;font-size:13px}th,td{border-bottom:1px
     <div class="row"><button id="su-run">Run suite</button><span class="mut" id="su-msg">Q-learning at the defaults takes several minutes.</span></div>
     <div id="su-results"></div>
   </section>
+  <section class="panel">
+    <b>Test an LLM pricing agent (bring your own endpoint)</b> <span class="mut">Two copies of your model price against each other in the simulated market. Uses any OpenAI-compatible chat endpoint you provide (a hosted API with your own key, or a local model such as Ollama). Your key stays in this page's memory, goes only to your endpoint, and is never saved or exported. API calls may cost you money; a local model is free. The endpoint must allow browser (CORS) requests.</span>
+    <div class="grid" style="margin-top:8px">
+      <div><label>Endpoint URL (chat completions)</label><input id="llm-url" placeholder="http://localhost:11434/v1/chat/completions"></div>
+      <div><label>Model name</label><input id="llm-model" placeholder="e.g. llama3.1"></div>
+      <div><label>API key (optional)</label><input id="llm-key" type="password" autocomplete="off"></div>
+      <div><label>Prompt goal</label><select id="llm-goal"><option value="long-run">Maximize cumulative profit over all periods</option><option value="profit">Maximize profit</option></select></div>
+      <div><label>Periods</label><input id="llm-periods" type="number" value="100" min="20" max="2000"></div>
+      <div><label>Seeds (independent runs)</label><input id="llm-seeds" type="number" value="5" min="1" max="30"></div>
+    </div>
+    <div class="row"><button id="llm-run">Run LLM test</button><span class="mut" id="llm-msg"></span></div>
+    <div id="llm-results"></div>
+  </section>
 </main>
 <script type="module" src="ui/app.js"></script>
 </body>

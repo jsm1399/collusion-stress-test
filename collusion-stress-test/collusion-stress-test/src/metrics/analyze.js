@@ -1,7 +1,7 @@
 import { profitGain } from '../core/market.js';
 import { deviationTest } from './deviation.js';
 
-function windowStats(sim, from, to) {
+export function windowStats(sim, from, to) {
   const { prices, profits, market } = sim, n = market.n, cnt = to - from;
   let sp = 0, spr = 0, same = 0, disp = 0;
   for (let t = from; t < to; t++) {
