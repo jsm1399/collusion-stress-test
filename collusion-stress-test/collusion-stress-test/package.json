@@ -1,0 +1,9 @@
+{
+  "name": "collusion-stress-test",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Open, reproducible stress-testing of autonomous pricing agents for anticompetitive behavior in simulated markets.",
+  "license": "MIT",
+  "scripts": { "test": "node --test", "build": "node scripts/build.mjs" }
+}
