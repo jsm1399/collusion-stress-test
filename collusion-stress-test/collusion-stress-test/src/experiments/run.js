@@ -7,7 +7,7 @@ import { normalizeConfig, configHash } from './config.js';
 import { ENGINE_VERSION } from '../version.js';
 
 const KEYS = ['delta', 'deltaDrift', 'avgPrice', 'premium', 'rigidity', 'dispersion'];
-const DEV = ['immediateGain', 'discountedGain', 'rivalCut', 'rivalCutShare', 'punishmentPeriods'];
+const DEV = ['immediateGain', 'discountedGain', 'rivalCut', 'rivalCutShare', 'punishmentPeriods', 'unprofitableShare'];
 
 function summarizeGroup(perSeed, tag) {
   const s = {};

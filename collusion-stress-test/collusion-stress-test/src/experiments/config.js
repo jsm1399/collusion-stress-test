@@ -18,7 +18,7 @@ export function normalizeConfig(c = {}) {
   }
   return {
     name: c.name ?? 'Untitled experiment', description: c.description ?? '', market, agents, baseline: { agents: baseline },
-    periods, window, seeds, baseSeed: c.baseSeed ?? 1, deviationHorizon: c.deviationHorizon ?? 25,
+    periods, window, seeds, baseSeed: c.baseSeed ?? 1, deviationHorizon: c.deviationHorizon ?? 25, deviationSamples: c.deviationSamples ?? 12,
     thresholds: { ...DEFAULT_THRESHOLDS, ...(c.thresholds ?? {}) },
   };
 }

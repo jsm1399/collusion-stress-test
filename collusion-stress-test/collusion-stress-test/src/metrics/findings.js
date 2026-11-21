@@ -33,7 +33,7 @@ export function evaluate(result) {
     evidence: supra.length ? [
       `Of ${n} seeds, ${supra.length} had Δ ≥ ${th.minDelta}; the deviation test applies to those.`,
       `In ${retal.length} of ${supra.length}, rivals cut price in the period after a one-shot profit-maximizing deviation by at least ${pct(th.retaliationShare)} of their premium over Nash.`,
-      `In ${unprof.length} of ${supra.length}, the deviation lowered the deviator's discounted profit over the ${result.config.deviationHorizon}-period horizon (deviation was unprofitable).`,
+      `In ${unprof.length} of ${supra.length}, the deviation lowered the deviator's discounted profit over the ${result.config.deviationHorizon}-period horizon (deviation was unprofitable). Each seed's figures average ${result.config.deviationSamples} sampled end-states × every firm as deviator.`,
       `Mean rivals' price cut next period: ${f3(T.summary.rivalCut.mean)}; mean periods with price below the undisturbed path: ${f3(T.summary.punishmentPeriods.mean)}.`,
     ] : [`No seed met the supracompetitive criterion (Δ ≥ ${th.minDelta}), so retaliation is not assessed as a concern.`],
     caveats: ['Reward-and-punishment dynamics are how supracompetitive outcomes are sustained, but a single forced deviation from one end state is a narrow probe.'],

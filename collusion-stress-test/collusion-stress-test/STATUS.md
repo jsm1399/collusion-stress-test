@@ -1,30 +1,29 @@
 # Project status
 
 ## Completed and verified
-- Market model, benchmarks (Nash 1.473 / monopoly 1.925 match Calvano et al. 2020), deterministic simulator, agents, metrics, forced-deviation test, findings rules, bootstrap CIs, Markdown/JSON/CSV reports. (engine tests)
-- Negative control (Nash agents) not flagged; positive control (grim trigger) flagged for pricing and retaliation. (tests)
-- **Deployment: Cloudflare Pages from GitHub `main`, auto-deploys on push.** (verified live)
-- **Browser execution, results display (findings, tables, charts), and all three exports (Markdown, JSON, CSV).** (verified live in browser)
-- Parameter-sweep engine (`src/experiments/sweep.js`, test passes) and reproducible study script (`scripts/study.mjs` → `docs/RESULTS.md`; 20-seed baseline + sweeps over μ, firm count, exploration decay).
+- Engine: market model and benchmarks (match Calvano et al. 2020), deterministic simulator, agents, metrics, findings rules, bootstrap CIs, reports. (tests)
+- Deployment: Cloudflare Pages from GitHub `main` (app root `collusion-stress-test/collusion-stress-test`), auto-deploys on push. (verified live)
+- Browser execution, results display, three exports, and the **Parameter sweep panel**. (verified live)
+- **v0.2.0 methodology**: forced-deviation test averaged over 12 sampled end-states × every firm as deviator (removes the single-state noise flagged earlier). Engine tests pass.
+- **Detector calibration** (`docs/CALIBRATION.md`): across 24 market conditions per scenario, 0 false positives for 3 competitive null types (72 runs total; rule-of-three upper bound ≈12.5% per scenario); grim-trigger detected 24/24 on both findings; price-matcher 24/24 pricing, 23/24 retaliation.
+- Q-learning study re-run under v0.2.0: two Q-learners Δ=0.73 [0.71, 0.75] over 20 seeds; both findings now flagged consistently in the 2-firm sweeps (retaliation noise resolved). With 3 firms pricing is flagged (Δ=0.25) but retaliation is not (cut share ≈ 0) — supracompetitive without observed punishment; hypothesis: under-trained agents; needs longer runs.
+- Reproducible studies: `scripts/study.mjs` → `docs/RESULTS.md`; `scripts/calibrate.mjs` → `docs/CALIBRATION.md`.
 
 ## In progress
-- Sweep UI panel (index.html, ui/app.js, ui/worker.js): written, syntax-checked, engine path tested in Node; **not yet verified in a browser**. Existing single-run path unchanged (worker stays backward-compatible).
+- Nothing pending beyond the operator upload.
 
 ## Blocked / needs operator
-- Upload the update files to GitHub and check that "Run sweep" works on the deployed site (one action).
+- Upload of the v0.2.0 update to the app root (one action, below in chat).
 
-## Findings from our simulations (see docs/RESULTS.md; stylized market only)
-- Two independent Q-learners: Δ = 0.73 [0.71, 0.75] over 20 seeds (all 20 seeds Δ ≥ 0.6) vs −0.004 for the competitive baseline; price premium ≈ 17% over Nash; deviating was unprofitable on average. Direction matches Calvano et al. (2020).
-- Δ falls with weaker product differentiation (μ 0.1→1: 0.70→0.47) and with a third firm (0.71→0.25, though 3-firm agents are less trained at 200k periods).
-- Slow exploration decay (β=2e-5) was correctly *not* flagged as sustained: Δ was still drifting.
-
-## Known weaknesses (next work)
-- Retaliation rule is noisy: it uses one forced deviation from one end state, and its per-seed share is high-variance (e.g. μ=0.1 mean cut share 0.65 yet not flagged). Fix: average the deviation test over many sampled states/deviation sizes.
-- Thresholds (Δ ≥ 0.1, drift ≤ 0.05, cut ≥ 25%) are transparent but not calibrated; need a false-positive study over null (competitive) agents across markets.
-- Run length (200k periods) is far shorter than the literature's; convergence is only proxied by window stability.
+## Known weaknesses
+- Nulls tested are simple competitive rules; false-positive rate for arbitrary competitive *learning* agents is not bounded.
+- Run length (200k periods) far shorter than the literature; convergence only proxied by window stability.
+- Single market family (symmetric logit Bertrand). Demand noise / imperfect monitoring, asymmetric firms, and auctions are not yet supported.
+- GitHub Actions CI never runs: the workflow sits in a nested `.github` folder (repo is nested one level). Needs a root-level workflow (operator upload to repo root) — batch with a later update.
+- Stray `update-1/` and `update-1-flat/` folders in the app root are harmless; delete when convenient.
 
 ## Deferred improvements
-- Demand noise / imperfect monitoring; asymmetric firms; auction/bidding environment.
+- Demand-noise / imperfect-monitoring condition (Green–Porter) — the most important realism gap.
+- Standard, versioned test suites with a fixed config + report template (commercial groundwork: repeatable independent testing).
 - Optional user-supplied model endpoints (LLM agents) via the agent interface.
-- Shareable report pages; versioned standard test suites (commercial groundwork).
-- License review before accepting outside contributions (currently MIT).
+- Shareable report pages; license review before outside contributions (MIT now).

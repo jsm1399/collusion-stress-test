@@ -21,13 +21,13 @@ export function analyzeRun(sim, cfg, wantSample) {
   const { periods: T, bench } = sim, w = cfg.window, n = sim.market.n;
   const fin = windowStats(sim, T - w, T), prev = windowStats(sim, T - 2 * w, T - w);
   const delta = profitGain(fin.avgProfit, bench), deltaPrev = profitGain(prev.avgProfit, bench);
-  const dev = deviationTest(sim, { horizon: cfg.deviationHorizon });
+  const dev = deviationTest(sim, { horizon: cfg.deviationHorizon, window: w, samples: cfg.deviationSamples });
   const metrics = {
     delta, deltaDrift: Math.abs(delta - deltaPrev), avgPrice: fin.avgPrice,
     premium: fin.avgPrice / bench.nash - 1, rigidity: fin.rigidity, dispersion: fin.dispersion,
     dev: {
       immediateGain: dev.immediateGain, discountedGain: dev.discountedGain, rivalCut: dev.rivalCut,
-      rivalCutShare: dev.rivalCutShare, punishmentPeriods: dev.punishmentPeriods,
+      rivalCutShare: dev.rivalCutShare, punishmentPeriods: dev.punishmentPeriods, unprofitableShare: dev.unprofitableShare,
     },
   };
   let sample = null;
