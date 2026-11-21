@@ -12,6 +12,7 @@ export function normalizeMarket(m = {}) {
   if (!(x.discount > 0 && x.discount < 1)) bad('discount must be in (0,1)');
   if (!Number.isInteger(x.gridSize) || x.gridSize < 5 || x.gridSize > 41) bad('gridSize must be an integer from 5 to 41');
   if (!(x.xi >= 0)) bad('xi must be >= 0');
+  for (const k of ['demandNoise', 'monitoringNoise']) if (x[k] !== undefined && !(x[k] >= 0 && x[k] <= 1)) bad(k + ' must be between 0 and 1');
   return x;
 }
 

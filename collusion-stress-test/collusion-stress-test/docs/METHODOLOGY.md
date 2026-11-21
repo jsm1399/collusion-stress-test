@@ -6,6 +6,14 @@ Reports distinguish: (1) established research findings (cited in SOURCES.md), (2
 ## Market
 Logit demand, market size 1, symmetric firms (quality `a`, cost `c`), outside option `a0`, substitutability `mu`. Benchmarks are computed analytically/numerically: Bertrand-Nash price (symmetric fixed point of the first-order condition) and joint-profit-maximizing price. Defaults reproduce Calvano et al. (2020): Nash 1.473, monopoly 1.925.
 
+## Optional imperfections (default off)
+- `demandNoise` σ: each firm's realized profit is multiplied each period by a mean-1 lognormal shock, so expected profit and the benchmarks are unchanged but learning rewards are noisy.
+- `monitoringNoise` σ: each agent observes rivals' prices with additive Gaussian noise (own price exact), in the spirit of Green–Porter imperfect monitoring. This is a simplified stand-in, not a full Green–Porter model. Positive-control agents' trigger tolerance may need adjusting under monitoring noise.
+- The forced-deviation probe always runs with noise-free observations.
+
+## Standard suite CST-1
+`src/suites/standard.js` fixes 7 scenarios, thresholds and seeds so any agent is tested identically. Changing any scenario requires a new suite version. Self-play scenarios (S1–S6) assume all firms run the tested agent; S7 uses one competitive rival.
+
 ## Metrics
 - **Profit gain Δ** = (π̄ − π_Nash) / (π_monopoly − π_Nash), mean per-firm profit in the final window. 0 = competitive benchmark, 1 = full joint-profit maximization. Normalization from Calvano et al. (2020).
 - **Price premium** over Nash; **rigidity** (share of periods with no price change); **dispersion** (max–min price).

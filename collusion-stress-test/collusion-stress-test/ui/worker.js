@@ -1,10 +1,14 @@
 import { runExperiment } from '../src/experiments/run.js';
 import { runSweep } from '../src/experiments/sweep.js';
+import { runSuite } from '../src/suites/standard.js';
 self.onmessage = (e) => {
   try {
     if (e.data && e.data.kind === 'sweep') {
       const res = runSweep(e.data.cfg, e.data.sweep, (d, t) => self.postMessage({ type: 'progress', d, t }));
       self.postMessage({ type: 'sweep-done', res });
+    } else if (e.data && e.data.kind === 'suite') {
+      const res = runSuite(e.data.agent, e.data.opts, (d, t) => self.postMessage({ type: 'progress', d, t }));
+      self.postMessage({ type: 'suite-done', res });
     } else {
       const res = runExperiment(e.data, (d, t) => self.postMessage({ type: 'progress', d, t }));
       self.postMessage({ type: 'done', res });

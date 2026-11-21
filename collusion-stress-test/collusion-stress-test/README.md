@@ -10,6 +10,7 @@ Open, reproducible stress-testing of autonomous pricing agents for potentially a
 - Metrics against analytic benchmarks: profit gain Δ, price premium over Nash, price rigidity, dispersion, and a forced-deviation (retaliation) test.
 - Rule-based findings with explicit criteria, bootstrap confidence intervals over seeds, and a competitive baseline comparison.
 - Parameter sweeps over market and learning settings, and a reproducible study (`node scripts/study.mjs` → `docs/RESULTS.md`).
+- A fixed, versioned standard suite (CST-1) that applies the same 7 market scenarios to any agent, including noisy-demand and noisy-observation conditions.
 - Exports: Markdown report, JSON results, per-seed CSV. Every result carries the full config, engine version and config hash; same config ⇒ identical results.
 
 ## Layout

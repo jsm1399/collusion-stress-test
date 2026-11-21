@@ -109,3 +109,29 @@ function renderSweep(s) {
   <div class="row"><button class="sec" id="sw-csv">Download sweep (.csv)</button></div>`;
   $('sw-csv').onclick = () => download('sweep-' + s.param + '.csv', sweepToCSV(sweepLast), 'text/csv');
 }
+
+// ---- Standard suite ----
+import { suiteToMarkdown } from '../src/suites/standard.js';
+for (const [k, v] of Object.entries(AGENT_TYPES)) $('su-agent').insertAdjacentHTML('beforeend', `<option value="${k}" ${k === 'q-learning' ? 'selected' : ''}>${esc(v.label)}</option>`);
+let suiteLast = null, suiteWorker = null;
+$('su-run').addEventListener('click', () => {
+  if (suiteWorker) suiteWorker.terminate();
+  $('su-run').disabled = true; $('su-results').innerHTML = ''; $('su-msg').textContent = 'Running…';
+  suiteWorker = new Worker(new URL('./worker.js', import.meta.url), { type: 'module' });
+  suiteWorker.onmessage = (e) => {
+    const m = e.data;
+    if (m.type === 'progress') $('su-msg').textContent = `Running… ${Math.round(100 * m.d / m.t)}%`;
+    else if (m.type === 'suite-done') { suiteLast = m.res; $('su-run').disabled = false; $('su-msg').textContent = 'Done.'; renderSuite(m.res); }
+    else { $('su-run').disabled = false; $('su-msg').textContent = 'Could not run: ' + m.message; }
+  };
+  suiteWorker.onerror = (e) => { $('su-run').disabled = false; $('su-msg').textContent = 'Worker error: ' + (e.message || 'unknown'); };
+  suiteWorker.postMessage({ kind: 'suite', agent: { type: $('su-agent').value }, opts: { periods: Number($('su-periods').value), seeds: Number($('su-seeds').value) } });
+});
+function renderSuite(r) {
+  const rows = r.results.map((x) => `<tr><td>${esc(x.id)} ${esc(x.title)}</td><td>${ci(x.delta)}</td><td>${f3(x.baselineDelta.mean)}</td><td>${f3(x.premium.mean)}</td><td><span class="badge ${x.pricing}">${LABEL[x.pricing]}</span></td><td><span class="badge ${x.retaliation}">${LABEL[x.retaliation]}</span></td></tr>`).join('');
+  $('su-results').innerHTML = `<p><b>Supracompetitive pricing flagged in ${r.flaggedScenarios} of ${r.results.length} scenarios.</b> <span class="mut">Run hash ${esc(r.runHash)} · engine v${esc(r.engineVersion)}. A clean result does not certify an agent as safe.</span></p>
+  <div class="scroll"><table><tr><th>Scenario</th><th>Δ test [95% CI]</th><th>Δ baseline</th><th>Price premium</th><th>Pricing</th><th>Retaliation</th></tr>${rows}</table></div>
+  <div class="row"><button class="sec" id="su-md">Download suite report (.md)</button><button class="sec" id="su-json">Download suite results (.json)</button></div>`;
+  $('su-md').onclick = () => download(`cst1-${r.runHash}.md`, suiteToMarkdown(suiteLast, new Date().toISOString()), 'text/markdown');
+  $('su-json').onclick = () => download(`cst1-${r.runHash}.json`, JSON.stringify(suiteLast, null, 2), 'application/json');
+}
