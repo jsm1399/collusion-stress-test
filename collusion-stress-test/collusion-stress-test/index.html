@@ -49,6 +49,15 @@ table{border-collapse:collapse;width:100%;font-size:13px}th,td{border-bottom:1px
     </details>
   </section>
   <div id="results"></div>
+  <section class="panel">
+    <b>Parameter sweep</b> <span class="mut">Repeats the whole experiment above for several values of one setting to see how behavior changes.</span>
+    <div class="grid" style="margin-top:8px">
+      <div><label>Setting to vary</label><select id="sw-param"></select></div>
+      <div><label>Values (comma-separated, up to 8)</label><input id="sw-values"></div>
+    </div>
+    <div class="row"><button id="sw-run">Run sweep</button><span class="mut" id="sw-msg">Tip: lower the seeds or periods above first; a sweep runs the full experiment once per value.</span></div>
+    <div id="sw-results"></div>
+  </section>
 </main>
 <script type="module" src="ui/app.js"></script>
 </body>

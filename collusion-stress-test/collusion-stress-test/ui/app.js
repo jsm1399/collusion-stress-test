@@ -80,3 +80,32 @@ function render(r) {
 
 loadPreset('positive-control');
 $('preset').value = 'positive-control';
+
+// ---- Parameter sweep ----
+import { SWEEP_PARAMS, sweepToCSV } from '../src/experiments/sweep.js';
+for (const [k, v] of Object.entries(SWEEP_PARAMS)) $('sw-param').insertAdjacentHTML('beforeend', `<option value="${k}">${esc(v.label)}</option>`);
+const setSweepDefaults = () => { $('sw-values').value = SWEEP_PARAMS[$('sw-param').value].defaults.join(', '); };
+$('sw-param').addEventListener('change', setSweepDefaults); setSweepDefaults();
+let sweepLast = null, sweepWorker = null;
+$('sw-run').addEventListener('click', () => {
+  const values = $('sw-values').value.split(',').map((x) => Number(x.trim())).filter((x) => Number.isFinite(x));
+  if (!values.length) { $('sw-msg').textContent = 'Enter at least one numeric value.'; return; }
+  if (sweepWorker) sweepWorker.terminate();
+  $('sw-run').disabled = true; $('sw-results').innerHTML = ''; $('sw-msg').textContent = 'Running…';
+  sweepWorker = new Worker(new URL('./worker.js', import.meta.url), { type: 'module' });
+  sweepWorker.onmessage = (e) => {
+    const m = e.data;
+    if (m.type === 'progress') $('sw-msg').textContent = `Running… ${Math.round(100 * m.d / m.t)}%`;
+    else if (m.type === 'sweep-done') { sweepLast = m.res; $('sw-run').disabled = false; $('sw-msg').textContent = 'Done.'; renderSweep(m.res); }
+    else { $('sw-run').disabled = false; $('sw-msg').textContent = 'Could not run: ' + m.message; }
+  };
+  sweepWorker.onerror = (e) => { $('sw-run').disabled = false; $('sw-msg').textContent = 'Worker error: ' + (e.message || 'unknown'); };
+  sweepWorker.postMessage({ kind: 'sweep', cfg: JSON.parse(JSON.stringify(cfg)), sweep: { path: $('sw-param').value, values } });
+});
+function renderSweep(s) {
+  const rows = s.points.map((p) => `<tr><td>${p.value}</td><td>${ci(p.delta)}</td><td>${f3(p.baselineDelta.mean)}</td><td>${f3(p.premium.mean)}</td><td>${f3(p.rivalCutShare.mean)}</td><td><span class="badge ${p.pricing}">${LABEL[p.pricing]}</span></td><td><span class="badge ${p.retaliation}">${LABEL[p.retaliation]}</span></td></tr>`).join('');
+  $('sw-results').innerHTML = `<div class="scroll"><table><tr><th>${esc(s.label)}</th><th>Δ test [95% CI]</th><th>Δ baseline</th><th>Price premium</th><th>Rival cut share</th><th>Pricing</th><th>Retaliation</th></tr>${rows}</table></div>
+  ${lineChart([{ name: 'Δ test', values: s.points.map((p) => p.delta.mean) }, { name: 'Δ baseline', values: s.points.map((p) => p.baselineDelta.mean) }], [], `Profit gain Δ across ${s.label} = ${s.points.map((p) => p.value).join(', ')}`)}
+  <div class="row"><button class="sec" id="sw-csv">Download sweep (.csv)</button></div>`;
+  $('sw-csv').onclick = () => download('sweep-' + s.param + '.csv', sweepToCSV(sweepLast), 'text/csv');
+}
